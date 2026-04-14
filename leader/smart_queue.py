@@ -5,3 +5,7 @@ def smart_queue(incoming: list, queue: list, inworker: list):
     while(True):
         # handle new inputs
         x=1
+
+        #Smart Batching
+        #Dynamic Batching
+        #Static Batching
