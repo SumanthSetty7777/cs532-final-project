@@ -2,4 +2,3 @@ TODO:
 - Create a script that tests by making many inputs and outputs, on multiple workers
 - Create a heartbeat function from the server to client with proper worker disconnect
     - Create ability to rerun if a worker disconnects
-- Create an ability to add multiple workers (ie worker port isn't fixed at 8001)

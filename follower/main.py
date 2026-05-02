@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Any, List
 import threading
-
+import sys
 from inference import load_model, inference_batch
 from heartbeat import connect_to_leader, heartbeat_loop
 
@@ -15,7 +15,9 @@ app = FastAPI()
 LEADER_URL = "http://localhost:8000"
 
 # this follower's addr; leader stores this + uses it to call this worker's /inference route
-MY_ADDR = "http://localhost:8001"
+MY_ADDR = "http://localhost:"
+
+MY_PORT = int(sys.argv[1])
 
 # load model once when follower starts
 model = load_model()
@@ -43,7 +45,7 @@ class InferenceResult(BaseModel):
 @app.on_event("startup")
 def startup_event():
     # tell leader this worker exists
-    connect_to_leader(LEADER_URL, MY_ADDR)
+    connect_to_leader(LEADER_URL, MY_ADDR+str(MY_PORT))
 
     # keep telling leader this worker is alive
     thread = threading.Thread(
@@ -69,3 +71,7 @@ def run_inference(items: List[InferenceItem]):
     # ]
     print("here")
     return inference_batch(model, items)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=MY_PORT)
