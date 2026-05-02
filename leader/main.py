@@ -63,6 +63,16 @@ async def inference(input: ModelInput):
             for out in data["outputs"]:
                 if(out.id == inval.id):
                     return inval
+                
+@app.post("/heartbeat")
+async def heartbeat(worker: Worker):
+    async with lock:
+        for w in data["workers"]:
+            if w.addr == worker.addr:
+                w.lastheartbeat = datetime.now()
+                return {"status": "ok"}
+    return {"status": "not found"}, 404
+
 @app.post("/connect_worker")
 async def connect(worker: Worker):
     async with lock:
