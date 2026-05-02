@@ -65,7 +65,7 @@ async def inference(input: ModelInput):
                     data["outputs"].append(result)
         for out in data["outputs"]:
             if(out["id"] == inval.id):
-                return inval
+                return out
                 
 @app.post("/heartbeat")
 async def heartbeat(worker: Worker):

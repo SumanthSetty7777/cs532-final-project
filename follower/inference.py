@@ -97,5 +97,5 @@ def inference_batch(model, items):
                 "output": str(e),
                 "isError": True
             })
-
+    print(results)
     return results
