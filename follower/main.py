@@ -1,6 +1,7 @@
 # The central loop that recieves requests, runs an inference, returns outputs
 from inference import inference
 from heartbeat import heartbeat
+import requests
 
 def main():
     model = 1 # load model

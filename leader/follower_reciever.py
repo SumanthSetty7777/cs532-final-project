@@ -8,6 +8,7 @@ class FollowerObject:
         # timestamp of the last heartbeat
         self.lastheartbeat = lastheartbeat
 
+
 def follower_reciever(workers: list):
     while(True):
         #TODO: if worker seen, add worker to list, with free as status, append follower objects
