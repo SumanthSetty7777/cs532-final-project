@@ -76,13 +76,15 @@ def inference_batch(model, items):
     - output
     - isError
     """
+    print("HERE")
 
     results = []
-
+    print(len(items))
     for item in items:
         try:
             output = inference(model, item.input)
-
+            print("HERE")
+            print(output)
             results.append({
                 "id": item.id,
                 "output": output,

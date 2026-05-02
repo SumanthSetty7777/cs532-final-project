@@ -67,5 +67,5 @@ def run_inference(items: List[InferenceItem]):
     #   {"id": "abc", "output": ..., "isError": false},
     #   {"id": "def", "output": ..., "isError": true}
     # ]
-
+    print("here")
     return inference_batch(model, items)

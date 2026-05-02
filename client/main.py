@@ -4,7 +4,7 @@ import requests
 def main():
     response = requests.post("http://localhost:8000/inference", json= {"data": "a"}, headers={})
     print(response)
-    print(response.json())
+    #print(response.json())
 
 if __name__ == "__main__":
     main()

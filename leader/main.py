@@ -25,7 +25,7 @@ MAX_QUEUE_SIZE = 5
 MAX_QUEUE_TIME = 1000
 
 class ModelInput(BaseModel):
-    data: str #data for input
+    data: dict #data for input
 
 class Worker(BaseModel):
     addr: str #address of worker
@@ -37,13 +37,14 @@ async def inference(input: ModelInput):
     if(len(data["workers"]) ==0):
         return { "error": "no workers available"}
     inval = InputObject(input.data, data)
+    arr = []
+    async with lock:
+        data["current_inputs"].append(inval)
+
     while(True):
         send = False
-        arr = []
         async with lock:
-            data["current_inputs"].append(inval)
-        async with lock:
-            if len(data["current_inputs"]) > MAX_QUEUE_SIZE or data["last_sent"]-timedelta(milliseconds=MAX_QUEUE_TIME) > datetime.now():
+            if len(data["current_inputs"]) > MAX_QUEUE_SIZE or data["last_sent"]-timedelta(milliseconds=MAX_QUEUE_TIME) < datetime.now():
                 arr = data["current_inputs"]
                 send = True
                 # TODO might an an id here not sure probably should idk
