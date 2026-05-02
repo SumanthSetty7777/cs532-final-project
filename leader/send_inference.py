@@ -17,7 +17,7 @@ def find_least_busy_worker(data):
 
 def send_inference(data, arr, lock):
     #large random id
-    id = unique_id(id)
+    id = unique_id(data)
     worker = find_least_busy_worker(data)
     if(worker == -1):
         return -1

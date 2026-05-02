@@ -35,7 +35,7 @@ class Worker(BaseModel):
 async def inference(input: ModelInput):
     if(len(data["workers"] ==0)):
         return {"error": "no workers available"}
-    inval = InputObject(input.data)
+    inval = InputObject(input.data, data)
     while(True):
         async with lock:
             data["current_inputs"].append(inval)

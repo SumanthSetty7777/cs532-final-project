@@ -8,7 +8,7 @@ class Worker:
         self.addr = ip
 
 def add_worker(data, worker):
-    id = unique_id()
+    id = unique_id(data)
     machine = Worker(id, worker.addr)
     data["workers"].append(machine)
     return 0
