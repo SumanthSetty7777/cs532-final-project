@@ -52,10 +52,10 @@ async def inference(input: ModelInput):
                 data["current_inputs"] = []
 
         if(send):
-            res = send_inference(data, arr, lock)
+            res = await send_inference(data, arr, lock)
             c = 0
             while(res == -1 and c < 10):
-                res = send_inference(data, arr, lock)
+                res = await send_inference(data, arr, lock)
                 c+=1
             if res == -1:
                 for val in arr:

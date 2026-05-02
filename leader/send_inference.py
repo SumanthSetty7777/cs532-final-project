@@ -15,19 +15,36 @@ def find_least_busy_worker(data):
             min_inputs = worker.cur_input_count
     return min_worker
 
-def send_inference(data, arr, lock):
+async def send_inference(data, arr, lock):
     #large random id
     id = unique_id(data)
     worker = find_least_busy_worker(data)
     if(worker == -1):
         return -1
-    data = [obj.to_dict() for obj in arr]
+    load = [obj.to_dict() for obj in arr]
 
-
+    async with lock:
+        for i in range(len(data["workers"])):
+            if worker.id == data["workers"][i].id:
+                data["workers"][i].cur_input_count+=1
+                data["workers"][i].cur_inputs.append(arr)
 
     headers = {}
     print(worker.addr)
-    response = requests.post(worker.addr+"/inference", json=data, headers=headers)
+    response = requests.post(worker.addr+"/inference", json=load, headers=headers)
+    if not response.ok:
+        return -1
+
+    async with lock:
+        for i in range(len(data["workers"])):
+            if worker.id == data["workers"][i].id:
+                data["workers"][i].cur_input_count-=1
+                for j in range(len(data["workers"][i].cur_inputs)):
+                    if(len(data["workers"][i].cur_inputs[j]) > 0):
+                        if(data["workers"][i].cur_inputs[j][0].id == arr[0].id):
+                            data["workers"][i].cur_inputs.pop(j)
+                    else:
+                        data["workers"][i].cur_inputs.pop(j)
 
     print(response.json())
     return response.json()
