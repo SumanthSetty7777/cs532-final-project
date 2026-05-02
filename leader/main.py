@@ -23,6 +23,8 @@ outlock = asyncio.Lock()
 # Constants
 MAX_QUEUE_SIZE = 5
 MAX_QUEUE_TIME = 1000
+HEARTBEAT_TIMEOUT_SECONDS = 15
+HEARTBEAT_CHECK_INTERVAL_SECONDS = 5
 
 class ModelInput(BaseModel):
     data: dict #data for input
@@ -60,7 +62,7 @@ async def inference(input: ModelInput):
             if res == -1:
                 for val in arr:
                     async with outlock:
-                        data["outputs"].append({"id": val.id, "output": "", "error": True})
+                        data["outputs"].append({"id": val.id, "output": "", "isError": True})
             else:
                 for result in res:
                     data["outputs"].append(result)
@@ -83,30 +85,40 @@ async def connect(worker: Worker):
         add_worker(data, worker)
     print("Workers: ",data["workers"])
 
-async def monitor_heartbeats():
+async def monitor_worker_heartbeats():
     while True:
-        await asyncio.sleep(5)
+        await asyncio.sleep(HEARTBEAT_CHECK_INTERVAL_SECONDS)
 
         now = datetime.now()
         dead_workers = []
 
         async with lock:
+            # Step 1: find workers whose heartbeat is too old
             for worker in data["workers"]:
-                time_since_heartbeat = now - worker.lastheartbeat
+                time_since_last_heartbeat = now - worker.lastheartbeat
 
-                if time_since_heartbeat > timedelta(seconds=15):
+                if time_since_last_heartbeat > timedelta(seconds=HEARTBEAT_TIMEOUT_SECONDS):
                     dead_workers.append(worker)
 
+            # Step 2: for each dead worker, recover its unfinished work
             for worker in dead_workers:
-                print(f"Worker dead: {worker.addr}")
+                print(f"Worker timed out: {worker.addr}")
 
                 # worker.cur_inputs is a list of batches.
-                # Each batch is a list of InputObject objects.
+                # Each batch is an array/list of InputObject objects.
+                #
+                # This is the "recall" part:
+                # We are NOT asking the dead worker for work back.
+                # We are using the leader's saved copy of what it had sent.
                 for batch in worker.cur_inputs:
                     data["current_inputs"].extend(batch)
 
+                # Step 3: remove dead worker from workers array
                 data["workers"].remove(worker)
+
+                print(f"Removed worker: {worker.addr}")
+                print(f"Requeued unfinished inputs from dead worker.")
 
 @app.on_event("startup")
 async def startup_event():
-    asyncio.create_task(monitor_heartbeats())
+    asyncio.create_task(monitor_worker_heartbeats())
