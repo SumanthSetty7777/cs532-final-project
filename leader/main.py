@@ -77,5 +77,3 @@ async def heartbeat(worker: Worker):
 async def connect(worker: Worker):
     async with lock:
         add_worker(data, worker)
-    
-        
