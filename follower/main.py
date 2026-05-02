@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from typing import Any, List
 import threading
 
-from inference import inference_batch
+from inference import load_model, inference_batch
 from heartbeat import connect_to_leader, heartbeat_loop
 
 
@@ -18,8 +18,7 @@ LEADER_URL = "http://localhost:8000"
 MY_ADDR = "http://localhost:8001"
 
 # load model once when follower starts
-# TODO: replace with real model loading.
-model = 1
+model = load_model()
 
 
 class InferenceItem(BaseModel):

@@ -21,10 +21,11 @@ def send_inference(data, arr, lock):
     worker = find_least_busy_worker(data)
     if(worker == -1):
         return -1
-    data = {"inputs": arr}
+    data = {"items": [obj.to_dict() for obj in arr]}
+
 
     headers = {}
-    response = requests.post(worker.ip+"/inference", data=data, headers=headers)
+    response = requests.post(worker.addr+"/inference", json=data, headers=headers)
 
 
-    return response
+    return response.json()

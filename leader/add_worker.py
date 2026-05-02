@@ -11,4 +11,5 @@ def add_worker(data, worker):
     id = unique_id(data)
     machine = Worker(id, worker.addr)
     data["workers"].append(machine)
+    print("Workers: ", data["workers"])
     return 0

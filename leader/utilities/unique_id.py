@@ -5,7 +5,7 @@ def unique_id(data):
     id = ""
 
     while(not unique):
-        id = uuid.uuid4()
+        id = str(uuid.uuid4())
         u = True
         for id_t in data["ids"]:
             if id_t == id:

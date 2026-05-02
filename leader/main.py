@@ -5,7 +5,7 @@ from input_object import InputObject
 from fastapi import FastAPI
 from pydantic import BaseModel
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 app = FastAPI()
@@ -33,14 +33,17 @@ class Worker(BaseModel):
 
 @app.post("/inference")
 async def inference(input: ModelInput):
-    if(len(data["workers"] ==0)):
-        return {"error": "no workers available"}
+    print(data["workers"])
+    if(len(data["workers"]) ==0):
+        return { "error": "no workers available"}
     inval = InputObject(input.data, data)
     while(True):
+        send = False
+        arr = []
         async with lock:
             data["current_inputs"].append(inval)
         async with lock:
-            if len(data["current_inputs"]) > MAX_QUEUE_SIZE or data["last_sent"]-MAX_QUEUE_TIME > datetime.now():
+            if len(data["current_inputs"]) > MAX_QUEUE_SIZE or data["last_sent"]-timedelta(milliseconds=MAX_QUEUE_TIME) > datetime.now():
                 arr = data["current_inputs"]
                 send = True
                 # TODO might an an id here not sure probably should idk
@@ -48,10 +51,11 @@ async def inference(input: ModelInput):
                 data["current_inputs"] = []
 
         if(send):
-            res = send_inference(data, lock)
+            res = send_inference(data, arr, lock)
             c = 0
             while(res == -1 and c < 10):
-                res = send_inference(data, lock)
+                res = send_inference(data, arr, lock)
+                c+=1
             if res == -1:
                 for val in arr:
                     async with outlock:
@@ -59,10 +63,9 @@ async def inference(input: ModelInput):
             else:
                 for result in res:
                     data["outputs"].append(result)
-        while(data["last_sent"]-MAX_QUEUE_TIME > datetime.now()):
-            for out in data["outputs"]:
-                if(out.id == inval.id):
-                    return inval
+        for out in data["outputs"]:
+            if(out["id"] == inval.id):
+                return inval
                 
 @app.post("/heartbeat")
 async def heartbeat(worker: Worker):
@@ -77,3 +80,4 @@ async def heartbeat(worker: Worker):
 async def connect(worker: Worker):
     async with lock:
         add_worker(data, worker)
+    print("Workers: ",data["workers"])
