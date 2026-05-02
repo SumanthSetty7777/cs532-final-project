@@ -31,13 +31,20 @@ class Worker(BaseModel):
 @app.post("/inference")
 async def inference(input: ModelInput):
     async with lock:
-        data["current_inputs"].append(input)
+        data["current_inputs"].append(input.data)
+    async with lock:
         if len(data["current_inputs"]) > MAX_QUEUE_SIZE or data["last_sent"]-MAX_QUEUE_TIME > datetime.now():
-            send_inference(data)
+            arr = data["current_inputs"]
+            send = True
+            # TODO might an an id here not sure probably should idk
+            data["previous_inputs"].append(arr)
+            data["current_inputs"] = []
+    if(send):
+        send_inference(data)
 
 
 @app.post("/connect_worker")
 async def connect(worker: Worker):
     async with lock:
         add_worker(data, worker)
-
+        
