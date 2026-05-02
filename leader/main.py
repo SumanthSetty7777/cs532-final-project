@@ -82,3 +82,31 @@ async def connect(worker: Worker):
     async with lock:
         add_worker(data, worker)
     print("Workers: ",data["workers"])
+
+async def monitor_heartbeats():
+    while True:
+        await asyncio.sleep(5)
+
+        now = datetime.now()
+        dead_workers = []
+
+        async with lock:
+            for worker in data["workers"]:
+                time_since_heartbeat = now - worker.lastheartbeat
+
+                if time_since_heartbeat > timedelta(seconds=15):
+                    dead_workers.append(worker)
+
+            for worker in dead_workers:
+                print(f"Worker dead: {worker.addr}")
+
+                # worker.cur_inputs is a list of batches.
+                # Each batch is a list of InputObject objects.
+                for batch in worker.cur_inputs:
+                    data["current_inputs"].extend(batch)
+
+                data["workers"].remove(worker)
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(monitor_heartbeats())

@@ -1,4 +1,5 @@
 from utilities.unique_id import unique_id
+from datetime import datetime
 
 class Worker:
     def __init__(self, id, ip):
@@ -6,6 +7,7 @@ class Worker:
         self.cur_inputs = []
         self.id = id
         self.addr = ip
+        self.lastheartbeat = datetime.now()
 
 def add_worker(data, worker):
     id = unique_id(data)
