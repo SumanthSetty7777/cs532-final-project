@@ -50,7 +50,7 @@ def startup_event():
     # keep telling leader this worker is alive
     thread = threading.Thread(
         target=heartbeat_loop,
-        args=(LEADER_URL, MY_ADDR),
+        args=(LEADER_URL, MY_ADDR + str(MY_PORT)),
         daemon=True
     )
     thread.start()
