@@ -13,8 +13,6 @@ payload = {
     }
 }
 
-print(payload)
-
 response = requests.post(
     "http://localhost:8000/inference",
     json=payload

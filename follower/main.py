@@ -44,13 +44,15 @@ class InferenceResult(BaseModel):
 
 @app.on_event("startup")
 def startup_event():
+    worker_addr = MY_ADDR + str(MY_PORT)
+
     # tell leader this worker exists
-    connect_to_leader(LEADER_URL, MY_ADDR+str(MY_PORT))
+    connect_to_leader(LEADER_URL, worker_addr)
 
     # keep telling leader this worker is alive
     thread = threading.Thread(
         target=heartbeat_loop,
-        args=(LEADER_URL, MY_ADDR),
+        args=(LEADER_URL, worker_addr),
         daemon=True
     )
     thread.start()

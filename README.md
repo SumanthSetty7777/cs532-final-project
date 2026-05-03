@@ -62,10 +62,7 @@ follower/
 
 tests/
   testsuite.py # integration tests placeholder
-  load_test.py # concurrent load generator with CSV output
-
-scripts/
-  run_worker_scaling.py # starts leader/workers and compares worker counts
+  load_test.py # concurrent load generator and worker-scaling experiment runner
 
 results/
   load_test_*.csv # generated load-test measurements
@@ -140,7 +137,8 @@ source .venv/bin/activate
 python tests/load_test.py --requests 20 --concurrency 5
 ```
 
-The script prints per-request latency and writes a CSV to `results/`.
+The script prints a summary and writes per-request results to a CSV in `results/`.
+Use `--verbose` if you want to print every request line in the terminal.
 Useful experiment knobs:
 
 ```bash
@@ -186,7 +184,7 @@ Stop any manually running leader/workers first, then run:
 ```bash
 cd /Users/ssetty/Documents/sys_dl/Project_test/cs532-final-project
 source .venv/bin/activate
-python scripts/run_worker_scaling.py --image-dir data/imagewoof2-160/val --workers 1,2,3 --requests 50 --concurrency 10
+python tests/load_test.py --image-dir data/imagewoof2-160/val --workers 1,2,3 --requests 50 --concurrency 10
 ```
 
 This script runs the same load test with 1 worker, then 2 workers, then 3 workers. It writes per-run CSVs plus a `summary.csv` under `results/worker_scaling_<timestamp>/`.
