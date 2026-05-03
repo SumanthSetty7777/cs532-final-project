@@ -43,13 +43,32 @@ Client → API → Queue → Scheduler → Worker Pool → Model → Response
 - PyTorch / Hugging Face (for inference)
 
 ## 📁 Project Structure
-app/
-core/ # request types, result store, startup
-queueing/ # request queue
-scheduler/ # batching + dispatch logic
-workers/ # worker threads + pool
-model/ # inference logic
-main.py # FastAPI entrypoint
+client/
+  main.py # simple request client
+  image_input.py # sends dog.jpeg as a base64 image request
+  dog.jpeg # sample image for demo/testing
+
+leader/
+  main.py # FastAPI leader/API server, batching, worker registry, heartbeats
+  send_inference.py # chooses a worker and sends a batch
+  add_worker.py # worker state object and registration helper
+  input_object.py # request wrapper with unique id
+  utilities/unique_id.py # UUID helper
+
+follower/
+  main.py # FastAPI worker process
+  inference.py # loads ResNet-18 and runs image inference
+  heartbeat.py # worker registration and heartbeat loop
+
+tests/
+  testsuite.py # integration tests placeholder
+  load_test.py # concurrent load generator with CSV output
+
+scripts/
+  run_worker_scaling.py # starts leader/workers and compares worker counts
+
+results/
+  load_test_*.csv # generated load-test measurements
 
 
 ## 👥 Team 
@@ -58,8 +77,119 @@ main.py # FastAPI entrypoint
 - Ipsita Bhattacharjee  
 - Sumanth Setty 
 
-## ⚙️ Setup (to be added)
-Instructions to run the system will be added after initial implementation.
+## ⚙️ Setup
+
+Create or activate the project virtual environment, then install dependencies:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+## ▶️ Running Locally
+
+Start the leader in terminal 1:
+
+```bash
+cd /Users/ssetty/Documents/sys_dl/Project_test/cs532-final-project
+source .venv/bin/activate
+cd leader
+uvicorn main:app --host 127.0.0.1 --port 8000
+```
+
+Start one worker in terminal 2:
+
+```bash
+cd /Users/ssetty/Documents/sys_dl/Project_test/cs532-final-project
+source .venv/bin/activate
+cd follower
+python main.py 8001
+```
+
+Send the sample image request in terminal 3:
+
+```bash
+cd /Users/ssetty/Documents/sys_dl/Project_test/cs532-final-project
+source .venv/bin/activate
+cd client
+python image_input.py
+```
+
+Expected output:
+
+```text
+200
+{'id': '...', 'output': 'golden retriever', 'isError': False}
+```
+
+Additional workers can be started on new ports:
+
+```bash
+cd follower
+python main.py 8002
+```
+
+## 📈 Load Testing
+
+With the leader and at least one worker running, run:
+
+```bash
+cd /Users/ssetty/Documents/sys_dl/Project_test/cs532-final-project
+source .venv/bin/activate
+python tests/load_test.py --requests 20 --concurrency 5
+```
+
+The script prints per-request latency and writes a CSV to `results/`.
+Useful experiment knobs:
+
+```bash
+python tests/load_test.py --requests 10 --concurrency 2
+python tests/load_test.py --requests 25 --concurrency 5
+python tests/load_test.py --requests 50 --concurrency 10
+```
+
+The load tester can also use a folder of images:
+
+```bash
+python tests/load_test.py --image-dir data/imagewoof2-160/val --requests 100 --concurrency 10
+```
+
+Recommended datasets for ResNet-18 load testing:
+
+- Imagewoof 160px: small ImageNet subset with dog breeds, good for this image-classification demo.
+- Imagenette 160px: small ImageNet subset with 10 easy classes, good if you want more varied objects.
+- Oxford-IIIT Pet: available through torchvision, useful if you want a cat/dog dataset without adding new libraries.
+
+Example Imagewoof download:
+
+```bash
+mkdir -p data
+curl -L https://s3.amazonaws.com/fast-ai-imageclas/imagewoof2-160.tgz -o data/imagewoof2-160.tgz
+tar -xzf data/imagewoof2-160.tgz -C data
+python tests/load_test.py --image-dir data/imagewoof2-160/val --requests 100 --concurrency 10
+```
+
+Example Imagenette download:
+
+```bash
+mkdir -p data
+curl -L https://s3.amazonaws.com/fast-ai-imageclas/imagenette2-160.tgz -o data/imagenette2-160.tgz
+tar -xzf data/imagenette2-160.tgz -C data
+python tests/load_test.py --image-dir data/imagenette2-160/val --requests 100 --concurrency 10
+```
+
+## ⚖️ Worker Scaling Experiment
+
+Stop any manually running leader/workers first, then run:
+
+```bash
+cd /Users/ssetty/Documents/sys_dl/Project_test/cs532-final-project
+source .venv/bin/activate
+python scripts/run_worker_scaling.py --image-dir data/imagewoof2-160/val --workers 1,2,3 --requests 50 --concurrency 10
+```
+
+This script runs the same load test with 1 worker, then 2 workers, then 3 workers. It writes per-run CSVs plus a `summary.csv` under `results/worker_scaling_<timestamp>/`.
 
 ## 📌 Notes
 This project is part of **COMPSCI 532: Systems for Data Science** at UMass Amherst.
