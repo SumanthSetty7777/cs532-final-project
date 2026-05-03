@@ -18,5 +18,10 @@ response = requests.post(
     json=payload
 )
 
-print(response.status_code)
-print(response.json())
+print("Status:", response.status_code)
+print("Text:", response.text)
+
+try:
+    print("JSON:", response.json())
+except Exception as e:
+    print("Could not parse JSON:", e)
