@@ -46,12 +46,16 @@ async def inference(input: ModelInput):
     while(True):
         send = False
         async with lock:
-            if len(data["current_inputs"]) > MAX_QUEUE_SIZE or data["last_sent"]-timedelta(milliseconds=MAX_QUEUE_TIME) < datetime.now():
+            queue_ready = len(data["current_inputs"]) >= MAX_QUEUE_SIZE
+            wait_expired = data["last_sent"] + timedelta(milliseconds=MAX_QUEUE_TIME) < datetime.now()
+            if len(data["current_inputs"]) > 0 and (queue_ready or wait_expired):
                 arr = data["current_inputs"]
                 send = True
                 # TODO might an an id here not sure probably should idk
                 data["previous_inputs"].append(arr)
                 data["current_inputs"] = []
+                data["last_sent"] = datetime.now()
+                print(f"Sending batch with {len(arr)} request(s)")
 
         if(send):
             res = await send_inference(data, arr, lock)
@@ -64,11 +68,14 @@ async def inference(input: ModelInput):
                     async with outlock:
                         data["outputs"].append({"id": val.id, "output": "", "isError": True})
             else:
-                for result in res:
-                    data["outputs"].append(result)
-        for out in data["outputs"]:
-            if(out["id"] == inval.id):
-                return out
+                async with outlock:
+                    for result in res:
+                        data["outputs"].append(result)
+        async with outlock:
+            for out in data["outputs"]:
+                if(out["id"] == inval.id):
+                    return out
+        await asyncio.sleep(0.01)
                 
 @app.post("/heartbeat")
 async def heartbeat(worker: Worker):
