@@ -3,46 +3,36 @@ Scalable ML inference system with batching, scheduling, and worker-based executi
 
 # ML Inference Serving System
 
-This project implements a scalable machine learning inference system designed to handle incoming prediction requests efficiently under varying workloads.
+This project implements a design for a server that can run ML models. It is built to be easily generalized to other models, though is currently set up to run ResNet-18, and is designed to scale to allow for many nodes and create a complex server.
 
-The system focuses on **systems design for ML inference**, including batching, scheduling, and concurrent request handling, rather than model training or accuracy.
+## Overview
 
-## 🚀 Overview
+The architecture follows a typical ML serving pipeline, where the client sends API requests, the leader queues and schedules them, finally selecting a worker to do the inference with the model, creating a response and sending it back to the leader, who finishes the request by sending it to the client.
 
-The architecture follows a typical ML serving pipeline:
-
-Client → API → Queue → Scheduler → Worker Pool → Model → Response
-
-- API receives inference requests
-- Requests are stored in a shared queue
-- A scheduler forms batches of requests
-- Worker threads process batches using a model
-- Results are returned to the client
-
-## 🎯 Key Features
+## Key Features
 
 - Request queue for handling concurrent inputs
-- Static batching (mid-project)
+- Static batching
 - Worker pool for parallel processing
 - Scheduler for batch formation
 - End-to-end request handling with response mapping
 
-## 📊 Future Enhancements (Final Phase)
+## Future Enhancements 
 
+Things we may do in the future:
 - Dynamic batching based on system load
 - Priority-based scheduling
-- Backpressure handling under overload
 - Performance metrics (latency, throughput, queue size)
 - Load testing and evaluation
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - Python
 - FastAPI
-- Threading / Concurrency
 - PyTorch / Hugging Face (for inference)
 
-## 📁 Project Structure
+## Project Structure
+
 client/
   main.py # simple request client
   image_input.py # sends dog.jpeg as a base64 image request
@@ -68,13 +58,13 @@ results/
   load_test_*.csv # generated load-test measurements
 
 
-## 👥 Team 
+## Team 
 - Brody Massad  
 - Hung Truong 
 - Ipsita Bhattacharjee  
 - Sumanth Setty 
 
-## ⚙️ Setup
+## Setup
 
 Create or activate the project virtual environment, then install dependencies:
 
@@ -84,7 +74,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## ▶️ Running Locally
+## Running Locally
 
 Start the leader in terminal 1:
 
@@ -127,7 +117,7 @@ cd follower
 python main.py 8002
 ```
 
-## 📈 Load Testing
+## Load Testing
 
 With the leader and at least one worker running, run:
 
@@ -177,7 +167,7 @@ tar -xzf data/imagenette2-160.tgz -C data
 python tests/load_test.py --image-dir data/imagenette2-160/val --requests 100 --concurrency 10
 ```
 
-## ⚖️ Worker Scaling Experiment
+## Worker Scaling Experiment
 
 Stop any manually running leader/workers first, then run:
 
@@ -189,5 +179,5 @@ python tests/load_test.py --image-dir data/imagewoof2-160/val --workers 1,2,3 --
 
 This script runs the same load test with 1 worker, then 2 workers, then 3 workers. It writes per-run CSVs plus a `summary.csv` under `results/worker_scaling_<timestamp>/`.
 
-## 📌 Notes
-This project is part of **COMPSCI 532: Systems for Data Science** at UMass Amherst.
+## Notes
+This project is part of COMPSCI 532: Systems for Data Science at UMass Amherst.
