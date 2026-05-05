@@ -60,6 +60,9 @@ async def inference(input: ModelInput):
         if(send):
             res = await send_inference(data, arr, lock)
             c = 0
+            if(res == -3):
+                return { "error": "workers all very busy"}
+
             # a bit of added fault tolerance
             while(res == -1 and c < 10):
                 res = await send_inference(data, arr, lock)
