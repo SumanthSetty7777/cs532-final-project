@@ -1,6 +1,7 @@
 import base64
 import requests
 
+#encodes an image to be send
 def image_to_base64(image_path):
     with open(image_path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
@@ -12,12 +13,13 @@ payload = {
         "image_base64": image_base64
     }
 }
-
+# sends a request
 response = requests.post(
     "http://localhost:8000/inference",
     json=payload
 )
 
+# outputs result
 print("Status:", response.status_code)
 print("Text:", response.text)
 
