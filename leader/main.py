@@ -42,27 +42,29 @@ async def inference(input: ModelInput):
     arr = []
     async with lock:
         data["current_inputs"].append(inval)
-
+    # Loop to control making sure that after a time minimum it is sent to the worker
     while(True):
         send = False
+        # Check if batch size or time has been hit
         async with lock:
             queue_ready = len(data["current_inputs"]) >= MAX_QUEUE_SIZE
             wait_expired = data["last_sent"] + timedelta(milliseconds=MAX_QUEUE_TIME) < datetime.now()
             if len(data["current_inputs"]) > 0 and (queue_ready or wait_expired):
                 arr = data["current_inputs"]
                 send = True
-                # TODO might an an id here not sure probably should idk
                 data["previous_inputs"].append(arr)
                 data["current_inputs"] = []
                 data["last_sent"] = datetime.now()
                 print(f"Sending batch with {len(arr)} request(s)")
-
+        # Send the batch to an inference machine
         if(send):
             res = await send_inference(data, arr, lock)
             c = 0
+            # a bit of added fault tolerance
             while(res == -1 and c < 10):
                 res = await send_inference(data, arr, lock)
                 c+=1
+            # Handle errors
             if res == -1:
                 for val in arr:
                     async with outlock:
