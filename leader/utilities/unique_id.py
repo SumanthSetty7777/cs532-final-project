@@ -1,5 +1,6 @@
 import uuid
 
+# While uuid.uuid4() is very unlikely to hit a duplicate id, this makes it literally impossible for greater robustness
 def unique_id(data):
     unique=False        
     id = ""
