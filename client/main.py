@@ -1,6 +1,6 @@
 import requests
 
-# sends a request on an input, recieves an output
+# sends a request on an input, recieves an output, legacy sanity check
 def main():
     response = requests.post("http://localhost:8000/inference", json= {"data": "a"}, headers={})
     print(response)
